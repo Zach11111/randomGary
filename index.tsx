@@ -63,17 +63,9 @@ export default definePlugin({
     authors: [{ name: "Zach Orange", id: 683550738198036516n }],
     start() {
         addChatBarButton("vc-gary", GaryChatBarIcon);
-        addButton("vc-gary", message => ({
-            label: "Gary",
-            icon: GaryIcon,
-            message,
-            channel: ChannelStore.getChannel(message.channel_id),
-            onClick: async () => {}
-        }));
     },
     stop() {
         removeChatBarButton("vc-gary");
-        removeButton("vc-gary");
     }
 });
 
