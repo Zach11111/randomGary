@@ -3,31 +3,42 @@ import { addChatBarButton, removeChatBarButton } from "@api/ChatButtons";
 import { addButton, removeButton } from "@api/MessagePopover";
 import { ChatBarButton } from "@api/ChatButtons";
 import { classes } from "@utils/misc";
-import { useEffect, useState, MessageActions, ChannelStore, Menu, SelectedChannelStore } from "@webpack/common";
+import { useEffect, useState, MessageActions, ChannelStore, SelectedChannelStore } from "@webpack/common";
 import { classNameFactory } from "@api/Styles";
 
 const cl = classNameFactory("vc-gary-");
 
-export function GaryIcon({ height = 24, width = 24, className }: { height?: number; width?: number; className?: string; }) {
+export function GaryIcon({ height = 24, width = 24, className }: { height?: number; width?: number; className?: string }) {
     return (
-        <svg
-            viewBox="0 0 24 24"
-            height={height}
-            width={width}
-            className={classes(cl("icon"), className)}
-        >
-            <path fill="currentColor" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z"/>
+        <svg viewBox="0 0 24 24" height={height} width={width} className={classes(cl("icon"), className)}>
+            <path 
+                fill="currentColor" 
+                fillRule="evenodd" 
+                d="M12.02 14.937c-.292 0-.59.045-.842.143a1.294 1.294 0 0 0-.408.245.916.916 0 0 0-.307.675c0 .325.173.552.307.674.133.123.285.198.408.246.253.098.55.142.842.142.29 0 .588-.044.84-.142.125-.048.276-.123.41-.246a.915.915 0 0 0 .306-.674.915.915 0 0 0-.307-.675 1.295 1.295 0 0 0-.408-.245 2.376 2.376 0 0 0-.841-.143Z" 
+                clipRule="evenodd" 
+            />
+            <path 
+                fill="currentColor" 
+                d="M14.037 12.646c.164-.266.49-.584.98-.584.488 0 .814.318.979.584.172.278.254.615.254.948 0 .332-.082.67-.254.947-.165.266-.49.584-.98.584-.489 0-.815-.318-.98-.584a1.811 1.811 0 0 1-.254-.947c0-.333.082-.67.255-.948ZM9.016 12.063c-.488 0-.814.317-.98.583a1.811 1.811 0 0 0-.254.948c0 .332.082.67.255.947.165.266.49.584.98.584.488 0 .814-.318.98-.584.171-.278.253-.615.253-.947 0-.333-.082-.67-.254-.948-.165-.266-.49-.584-.98-.584Z" 
+            />
+            <path 
+                fill="currentColor" 
+                fillRule="evenodd" 
+                d="M6.095 4.25c-.614 0-1.32.179-1.886.666-.587.505-.939 1.272-.939 2.271v1.878c.001.294.051.883.219 1.374.055.161.142.374.289.567a4.924 4.924 0 0 0-.48 1.704c-.051.467-.052.958-.044 1.411-.66.23-1.345.514-1.66.718a.75.75 0 0 0 .813 1.26c.116-.075.46-.233.912-.405.069.479.208.915.403 1.312a21.329 21.329 0 0 0-.516.333.75.75 0 1 0 .814 1.26l.131-.086c.131-.085.282-.184.446-.284.59.602 1.322 1.067 2.082 1.417 1.781.82 3.89 1.104 5.321 1.104 1.431 0 3.54-.285 5.321-1.104.76-.35 1.493-.815 2.082-1.417.164.1.315.199.446.284l.131.086a.75.75 0 0 0 .814-1.26l-.113-.074c-.11-.072-.247-.162-.403-.259.195-.396.335-.833.404-1.312.452.172.795.33.912.405a.75.75 0 0 0 .813-1.26c-.315-.204-1-.488-1.661-.718a11.31 11.31 0 0 0-.044-1.412 4.922 4.922 0 0 0-.48-1.703c.147-.193.234-.406.29-.567a4.79 4.79 0 0 0 .218-1.374V7.188c0-1-.352-1.766-.939-2.272-.565-.487-1.272-.666-1.886-.666-.408 0-.83.157-1.171.31a12.82 12.82 0 0 0-1.078.571l-.213.123-.002.001c-.264.153-.498.29-.707.397-.13.066-.23.112-.306.14a.696.696 0 0 1-.062.02 4.701 4.701 0 0 1-.648-.052l-.162-.02A11.885 11.885 0 0 0 12 5.656c-.772 0-1.21.041-1.556.084l-.162.02a4.7 4.7 0 0 1-.648.052.703.703 0 0 1-.062-.02 2.92 2.92 0 0 1-.306-.14 17.37 17.37 0 0 1-.707-.397l-.215-.124a12.82 12.82 0 0 0-1.077-.57c-.341-.154-.764-.311-1.172-.311Zm.067 13.364c.334.252.719.474 1.144.67 1.53.704 3.412.966 4.694.966s3.163-.262 4.694-.966c.425-.196.81-.418 1.144-.67a.75.75 0 0 1 .13-1.489c.327 0 .662.082.972.195.159-.332.256-.695.283-1.093a2.999 2.999 0 0 0-.61-.102.75.75 0 0 1 0-1.5c.195 0 .415.03.637.072 0-.276-.009-.547-.039-.825-.07-.645-.253-1.218-.684-1.727a3.39 3.39 0 0 0-.587-.54.75.75 0 1 1 .888-1.21c.12.088.232.178.338.27.044-.228.064-.467.064-.604V7.188c0-.626-.206-.953-.418-1.135-.232-.2-.562-.303-.907-.303-.07 0-.246.039-.554.178-.287.13-.608.308-.947.503a93.24 93.24 0 0 0-.193.112c-.268.155-.545.316-.79.442-.155.08-.316.156-.471.214a1.625 1.625 0 0 1-.556.114c-.372 0-.632-.034-.883-.067l-.137-.017A10.404 10.404 0 0 0 12 7.156c-.708 0-1.085.037-1.373.073l-.138.017c-.25.033-.511.066-.883.066-.213 0-.412-.06-.555-.113a4.362 4.362 0 0 1-.472-.214c-.245-.126-.522-.287-.79-.442l-.193-.112c-.339-.195-.66-.374-.947-.503-.308-.14-.484-.178-.554-.178-.344 0-.675.103-.907.303-.212.182-.418.51-.418 1.135V9.06c0 .137.02.376.064.604.107-.092.22-.182.338-.27a.75.75 0 0 1 .888 1.21c-.24.176-.433.357-.587.54-.43.51-.614 1.082-.684 1.727-.03.278-.04.55-.04.825.223-.043.443-.072.638-.072a.75.75 0 0 1 0 1.5c-.106 0-.312.03-.61.102.027.398.125.761.283 1.093a2.88 2.88 0 0 1 .972-.195.75.75 0 0 1 .13 1.489Z" 
+                clipRule="evenodd" 
+            />
         </svg>
     );
 }
+
 
 export const GaryChatBarIcon: ChatBarButton = ({ isMainChat }) => {
     const handleClick = () => {
         const currentChannelId = SelectedChannelStore.getChannelId();
         if (currentChannelId) {
-            const message = GetGary()
+            const message = GetGary();
             MessageActions.sendMessage(currentChannelId, { content: message });
-            console.log('gary');
+            console.log('Gary message sent.');
         } else {
             console.error('No current channel found');
         }
@@ -39,9 +50,7 @@ export const GaryChatBarIcon: ChatBarButton = ({ isMainChat }) => {
         <ChatBarButton
             tooltip="Click for Gary"
             onClick={handleClick}
-            buttonProps={{
-                "aria-label": "Gary Button"
-            }}
+            buttonProps={{ "aria-label": "Gary Button" }}
         >
             <GaryIcon className={cl("chat-button")} />
         </ChatBarButton>
@@ -50,20 +59,17 @@ export const GaryChatBarIcon: ChatBarButton = ({ isMainChat }) => {
 
 export default definePlugin({
     name: "RandomGary",
-    description: "Adds a button to send a random gary picture!",
+    description: "Adds a button to send a random Gary picture!",
     authors: [{ name: "Zach Orange", id: 683550738198036516n }],
     start() {
         addChatBarButton("vc-gary", GaryChatBarIcon);
-        addButton("vc-gary", message => {
-            return {
-                label: "Gary",
-                icon: GaryIcon,
-                message,
-                channel: ChannelStore.getChannel(message.channel_id),
-                onClick: async () => {
-                }
-            };
-        });
+        addButton("vc-gary", message => ({
+            label: "Gary",
+            icon: GaryIcon,
+            message,
+            channel: ChannelStore.getChannel(message.channel_id),
+            onClick: async () => {}
+        }));
     },
     stop() {
         removeChatBarButton("vc-gary");
@@ -74,6 +80,5 @@ export default definePlugin({
 export function GetGary() {
     const urlBase = 'https://cdn.garybot.dev/gary';
     const randomNumber = Math.floor(Math.random() * 532) + 1;
-    const url = `${urlBase}${randomNumber}.jpg`
-    return url;
-  }
+    return `${urlBase}${randomNumber}.jpg`;
+}
