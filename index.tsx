@@ -25,25 +25,21 @@ export const GaryChatBarIcon: ChatBarButton = ({ isMainChat }) => {
     const [isAnimating, setIsAnimating] = useState(false);
 
     const handleClick = () => {
-        console.log('Gary button clicked');
         setIsAnimating(true);
         setTimeout(() => {
             setIsAnimating(false);
-            console.log('Animation ended');
         }, 1000);
 
         const currentChannelId = SelectedChannelStore.getChannelId();
         if (currentChannelId) {
             const message = GetGary();
             MessageActions.sendMessage(currentChannelId, { content: message });
-            console.log('Gary message sent');
         } else {
             console.error('No current channel found');
         }
     };
 
     useEffect(() => {
-        console.log('Animating state:', isAnimating);
     }, [isAnimating]);
 
     if (!isMainChat) return null;
@@ -101,13 +97,11 @@ export default definePlugin({
         `;
         style.setAttribute('data-gary-style', 'true');
         document.head.appendChild(style);
-        console.log('Gary plugin started');
     },
     stop() {
         removeChatBarButton("vc-gary");
         const style = document.head.querySelector('style[data-gary-style]');
         if (style) style.remove();
-        console.log('Gary plugin stopped');
     }
 });
 
