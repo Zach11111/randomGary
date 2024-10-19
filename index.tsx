@@ -103,7 +103,7 @@ export const GaryChatBarIcon: ChatBarButton = ({ isMainChat }) => {
         setTimeout(() => setIsAnimating(false), 1000);
 
         if (currentChannelId) {
-            const link = GetGary();
+            const link = await getUrl();
             if (settings.store.randomGarySendMethod === "link") {
                 await sendGaryLink(currentChannelId, link);
             } else {
@@ -117,7 +117,7 @@ export const GaryChatBarIcon: ChatBarButton = ({ isMainChat }) => {
         setTimeout(() => setIsAnimating(false), 1000);
 
         if (currentChannelId) {
-            const link = GetGary();
+            const link = await getUrl();
             if (settings.store.randomGarySendMethod === "attachment") {
                 await sendGaryLink(currentChannelId, link);
             } else {
@@ -191,8 +191,12 @@ export default definePlugin({
     }
 });
 
-export function GetGary() {
+export async function getUrl() {
+    const response = await fetch("https://garybot.dev/api/totalgarys");
+    const { num: numImages } = await response.json();
     const urlBase = "https://cdn.garybot.dev/gary";
-    const randomNumber = Math.floor(Math.random() * 532) + 1;
+    const array = new Uint32Array(1);
+    crypto.getRandomValues(array);
+    const randomNumber = (array[0] % numImages) + 1;
     return `${urlBase}${randomNumber}.jpg`;
 }
