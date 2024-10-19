@@ -4,7 +4,8 @@ import { classNameFactory } from "@api/Styles";
 import { classes } from "@utils/misc";
 import definePlugin, { OptionType } from "@utils/types";
 import { findLazy } from "@webpack";
-import { Constants, MessageActions, RestAPI, SelectedChannelStore, showToast, SnowflakeUtils, Toasts, useEffect, useState } from "@webpack/common";
+import { ChannelStore, Constants, MessageActions, PermissionsBits, PermissionStore, RestAPI, SelectedChannelStore, showToast, SnowflakeUtils, Toasts, useState } from "@webpack/common";
+
 const cl = classNameFactory("vc-gary-");
 const CloudUpload = findLazy(m => m.prototype?.trackUploadFinished);
 
@@ -22,7 +23,7 @@ export function GaryIcon({ height = 30, width = 30, className }: { height?: numb
 }
 
 const settings = definePluginSettings({
-    type: {
+    randomGarySendMethod: {
         description: "How to send the Gary picture",
         type: OptionType.SELECT,
         options: [
@@ -32,8 +33,30 @@ const settings = definePluginSettings({
     },
 });
 
+async function sendGaryLink(channelId: string, link: string) {
+    try {
+        const channel = ChannelStore.getChannel(channelId);
+        if (channel.guild_id && !PermissionStore.can(PermissionsBits.EMBED_LINKS, channel)) {
+            showToast("Missing required permissions to embed links", Toasts.Type.FAILURE);
+            return;
+        }
+        await MessageActions.sendMessage(channelId, { content: link });
+    } catch (error) {
+        console.error("Failed to send Gary link:", error);
+        showToast("Failed to send Gary image", Toasts.Type.FAILURE);
+    }
+}
+
 async function uploadGaryImage(url: string, channelId: string) {
     try {
+        const channel = ChannelStore.getChannel(channelId);
+
+        if (channel.guild_id && !PermissionStore.can(PermissionsBits.ATTACH_FILES, channel)) {
+            showToast("Missing required permissions to upload files", Toasts.Type.FAILURE);
+            return;
+        }
+
+        showToast("Image is uploading this may take a few seconds.", Toasts.Type.MESSAGE);
         const response = await fetch(url);
         const blob = await response.blob();
         const file = new File([blob], "gary.jpg", { type: "image/jpeg" });
@@ -74,44 +97,34 @@ async function uploadGaryImage(url: string, channelId: string) {
 export const GaryChatBarIcon: ChatBarButton = ({ isMainChat }) => {
     const [isAnimating, setIsAnimating] = useState(false);
     const currentChannelId = SelectedChannelStore.getChannelId();
+
     const handleClick = async () => {
         setIsAnimating(true);
-        setTimeout(() => {
-            setIsAnimating(false);
-        }, 1000);
+        setTimeout(() => setIsAnimating(false), 1000);
 
         if (currentChannelId) {
             const link = GetGary();
-            if (settings.store.type === "link") {
-                MessageActions.sendMessage(currentChannelId, { content: link });
+            if (settings.store.randomGarySendMethod === "link") {
+                await sendGaryLink(currentChannelId, link);
             } else {
                 await uploadGaryImage(link, currentChannelId);
             }
-        } else {
-            console.error("No current channel found");
         }
     };
 
     const handleRightClick = async (e: React.MouseEvent) => {
         setIsAnimating(true);
-        setTimeout(() => {
-            setIsAnimating(false);
-        }, 1000);
+        setTimeout(() => setIsAnimating(false), 1000);
 
         if (currentChannelId) {
             const link = GetGary();
-            if (settings.store.type === "attachment") {
-                MessageActions.sendMessage(currentChannelId, { content: link });
+            if (settings.store.randomGarySendMethod === "attachment") {
+                await sendGaryLink(currentChannelId, link);
             } else {
                 await uploadGaryImage(link, currentChannelId);
             }
-        } else {
-            console.error("No current channel found");
         }
     };
-
-    useEffect(() => {
-    }, [isAnimating]);
 
     if (!isMainChat) return null;
 
