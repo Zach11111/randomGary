@@ -24,11 +24,11 @@ export function GaryIcon({ height = 30, width = 30, className }: { height?: numb
 
 const settings = definePluginSettings({
     randomGarySendMethod: {
-        description: "How to send the Gary picture",
+        description: "Choose the buttons behavior.",
         type: OptionType.SELECT,
         options: [
-            { label: "Send as a link", value: "link", default: true },
-            { label: "Send as an attachment", value: "attachment" }
+            { label: "Left Click: Send as a link, Right Click: Send as an attachment", value: "link", default: true },
+            { label: "Left Click: Send as an attachment, Right Click: Send as a link", value: "attachment" }
         ],
     },
 });
@@ -56,7 +56,7 @@ async function uploadGaryImage(url: string, channelId: string) {
             return;
         }
 
-        showToast("Image is uploading this may take a few seconds.", Toasts.Type.MESSAGE);
+        showToast("Uploading image, this may take a few seconds.", Toasts.Type.MESSAGE);
         const response = await fetch(url);
         const blob = await response.blob();
         const file = new File([blob], "gary.jpg", { type: "image/jpeg" });
