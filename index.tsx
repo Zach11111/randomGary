@@ -3,12 +3,12 @@ import { definePluginSettings } from "@api/Settings";
 import { classNameFactory } from "@api/Styles";
 import { classes } from "@utils/misc";
 import definePlugin, { OptionType } from "@utils/types";
-import { findLazy } from "@webpack";
-import { ChannelStore, Constants, MessageActions, PermissionsBits, PermissionStore, RestAPI, SelectedChannelStore, showToast, SnowflakeUtils, Toasts, useState } from "@webpack/common";
+import { findLazy, findStoreLazy } from "@webpack";
+import { ChannelStore, Constants, FluxDispatcher, MessageActions, PermissionsBits, PermissionStore, RestAPI, SelectedChannelStore, showToast, SnowflakeUtils, Toasts, useState } from "@webpack/common";
 
 const cl = classNameFactory("vc-gary-");
 const CloudUpload = findLazy(m => m.prototype?.trackUploadFinished);
-
+const PendingReplyStore = findStoreLazy("PendingReplyStore");
 export function GaryIcon({ height = 30, width = 30, className }: { height?: number; width?: number; className?: string; }) {
     return (
         <svg xmlns="http://www.w3.org/2000/svg" width={width} height={height} fill="none" viewBox="0 0 24 24" className={classes(className, cl("icon"))}>
@@ -34,13 +34,26 @@ const settings = definePluginSettings({
 });
 
 async function sendGaryLink(channelId: string, link: string) {
+    const reply = PendingReplyStore.getPendingReply(channelId);
+    if (reply) FluxDispatcher.dispatch({ type: "DELETE_PENDING_REPLY", channelId });
     try {
         const channel = ChannelStore.getChannel(channelId);
         if (channel.guild_id && !PermissionStore.can(PermissionsBits.EMBED_LINKS, channel)) {
             showToast("Missing required permissions to embed links", Toasts.Type.FAILURE);
             return;
         }
-        await MessageActions.sendMessage(channelId, { content: link });
+        RestAPI.post({
+            url: Constants.Endpoints.MESSAGES(channelId),
+            body: {
+                channel_id: channelId,
+                content: link,
+                nonce: SnowflakeUtils.fromTimestamp(Date.now()),
+                sticker_ids: [],
+                type: 0,
+                attachments: [],
+                message_reference: reply ? MessageActions.getSendMessageOptionsForReply(reply)?.messageReference : null,
+            }
+        });
     } catch (error) {
         console.error("Failed to send Gary link:", error);
         showToast("Failed to send Gary image", Toasts.Type.FAILURE);
@@ -48,6 +61,8 @@ async function sendGaryLink(channelId: string, link: string) {
 }
 
 async function uploadGaryImage(url: string, channelId: string) {
+    const reply = PendingReplyStore.getPendingReply(channelId);
+    if (reply) FluxDispatcher.dispatch({ type: "DELETE_PENDING_REPLY", channelId });
     try {
         const channel = ChannelStore.getChannel(channelId);
 
@@ -80,7 +95,8 @@ async function uploadGaryImage(url: string, channelId: string) {
                         id: "0",
                         filename: upload.filename,
                         uploaded_filename: upload.uploadedFilename
-                    }]
+                    }],
+                    message_reference: reply ? MessageActions.getSendMessageOptionsForReply(reply)?.messageReference : null,
                 }
             });
         });
