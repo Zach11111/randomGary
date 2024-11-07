@@ -3,12 +3,13 @@ import { definePluginSettings } from "@api/Settings";
 import { classNameFactory } from "@api/Styles";
 import { classes } from "@utils/misc";
 import definePlugin, { OptionType } from "@utils/types";
-import { findLazy, findStoreLazy } from "@webpack";
+import { findByPropsLazy, findLazy, findStoreLazy } from "@webpack";
 import { ChannelStore, Constants, FluxDispatcher, MessageActions, PermissionsBits, PermissionStore, RestAPI, SelectedChannelStore, showToast, SnowflakeUtils, Toasts, useState } from "@webpack/common";
 
 const cl = classNameFactory("vc-gary-");
 const CloudUpload = findLazy(m => m.prototype?.trackUploadFinished);
 const PendingReplyStore = findStoreLazy("PendingReplyStore");
+const { getSlowmodeCooldownGuess } = findByPropsLazy("getSlowmodeCooldownGuess");
 export function GaryIcon({ height = 30, width = 30, className }: { height?: number; width?: number; className?: string; }) {
     return (
         <svg xmlns="http://www.w3.org/2000/svg" width={width} height={height} fill="none" viewBox="0 0 24 24" className={classes(className, cl("icon"))}>
@@ -37,23 +38,34 @@ async function sendGaryLink(channelId: string, link: string) {
     const reply = PendingReplyStore.getPendingReply(channelId);
     if (reply) FluxDispatcher.dispatch({ type: "DELETE_PENDING_REPLY", channelId });
     try {
-        const channel = ChannelStore.getChannel(channelId);
-        if (channel.guild_id && !PermissionStore.can(PermissionsBits.EMBED_LINKS, channel)) {
-            showToast("Missing required permissions to embed links", Toasts.Type.FAILURE);
-            return;
-        }
-        RestAPI.post({
-            url: Constants.Endpoints.MESSAGES(channelId),
-            body: {
-                channel_id: channelId,
-                content: link,
-                nonce: SnowflakeUtils.fromTimestamp(Date.now()),
-                sticker_ids: [],
-                type: 0,
-                attachments: [],
-                message_reference: reply ? MessageActions.getSendMessageOptionsForReply(reply)?.messageReference : null,
+        if (getSlowmodeCooldownGuess(channelId) === 0) {
+            const channel = ChannelStore.getChannel(channelId);
+            if (channel.guild_id && !PermissionStore.can(PermissionsBits.EMBED_LINKS, channel)) {
+                showToast("Missing required permissions to embed links", Toasts.Type.FAILURE);
+                return;
             }
-        });
+            RestAPI.post({
+                url: Constants.Endpoints.MESSAGES(channelId),
+                body: {
+                    channel_id: channelId,
+                    content: link,
+                    nonce: SnowflakeUtils.fromTimestamp(Date.now()),
+                    sticker_ids: [],
+                    type: 0,
+                    attachments: [],
+                    message_reference: reply ? MessageActions.getSendMessageOptionsForReply(reply)?.messageReference : null,
+                }
+            });
+
+            const cooldownMs = channel.rateLimitPerUser * 1000;
+
+            FluxDispatcher.dispatch({
+                type: "SLOWMODE_SET_COOLDOWN",
+                channelId,
+                slowmodeType: 0,
+                cooldownMs
+            });
+        }
     } catch (error) {
         console.error("Failed to send Gary link:", error);
         showToast("Failed to send Gary image", Toasts.Type.FAILURE);
@@ -64,46 +76,56 @@ async function uploadGaryImage(url: string, channelId: string) {
     const reply = PendingReplyStore.getPendingReply(channelId);
     if (reply) FluxDispatcher.dispatch({ type: "DELETE_PENDING_REPLY", channelId });
     try {
-        const channel = ChannelStore.getChannel(channelId);
+        if (getSlowmodeCooldownGuess(channelId) === 0) {
+            const channel = ChannelStore.getChannel(channelId);
 
-        if (channel.guild_id && !PermissionStore.can(PermissionsBits.ATTACH_FILES, channel)) {
-            showToast("Missing required permissions to upload files", Toasts.Type.FAILURE);
-            return;
-        }
+            if (channel.guild_id && !PermissionStore.can(PermissionsBits.ATTACH_FILES, channel)) {
+                showToast("Missing required permissions to upload files", Toasts.Type.FAILURE);
+                return;
+            }
 
-        showToast("Uploading image, this may take a few seconds.", Toasts.Type.MESSAGE);
-        const response = await fetch(url);
-        const blob = await response.blob();
-        const file = new File([blob], "gary.jpg", { type: "image/jpeg" });
+            showToast("Uploading image, this may take a few seconds.", Toasts.Type.MESSAGE);
+            const response = await fetch(url);
+            const blob = await response.blob();
+            const file = new File([blob], "gary.jpg", { type: "image/jpeg" });
 
-        const upload = new CloudUpload({
-            file,
-            isThumbnail: false,
-            platform: 1,
-        }, channelId, false, 0);
+            const upload = new CloudUpload({
+                file,
+                isThumbnail: false,
+                platform: 1,
+            }, channelId, false, 0);
 
-        upload.on("complete", () => {
-            RestAPI.post({
-                url: Constants.Endpoints.MESSAGES(channelId),
-                body: {
-                    channel_id: channelId,
-                    content: "",
-                    nonce: SnowflakeUtils.fromTimestamp(Date.now()),
-                    sticker_ids: [],
-                    type: 0,
-                    attachments: [{
-                        id: "0",
-                        filename: upload.filename,
-                        uploaded_filename: upload.uploadedFilename
-                    }],
-                    message_reference: reply ? MessageActions.getSendMessageOptionsForReply(reply)?.messageReference : null,
-                }
+            upload.on("complete", () => {
+                RestAPI.post({
+                    url: Constants.Endpoints.MESSAGES(channelId),
+                    body: {
+                        channel_id: channelId,
+                        content: "",
+                        nonce: SnowflakeUtils.fromTimestamp(Date.now()),
+                        sticker_ids: [],
+                        type: 0,
+                        attachments: [{
+                            id: "0",
+                            filename: upload.filename,
+                            uploaded_filename: upload.uploadedFilename
+                        }],
+                        message_reference: reply ? MessageActions.getSendMessageOptionsForReply(reply)?.messageReference : null,
+                    }
+                });
+
+                const cooldownMs = channel.rateLimitPerUser * 1000;
+
+                FluxDispatcher.dispatch({
+                    type: "SLOWMODE_SET_COOLDOWN",
+                    channelId,
+                    slowmodeType: 0,
+                    cooldownMs
+                });
             });
-        });
 
-        upload.on("error", () => showToast("Failed to upload Gary image", Toasts.Type.FAILURE));
-        upload.upload();
-
+            upload.on("error", () => showToast("Failed to upload Gary image", Toasts.Type.FAILURE));
+            upload.upload();
+        }
     } catch (error) {
         console.error("Failed to upload Gary image:", error);
         MessageActions.sendMessage(channelId, { content: "Failed to upload Gary image :(" });
