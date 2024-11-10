@@ -1,3 +1,4 @@
+import "./styles.css"
 import { addChatBarButton, ChatBarButton, removeChatBarButton } from "@api/ChatButtons";
 import { definePluginSettings } from "@api/Settings";
 import { classNameFactory } from "@api/Styles";
@@ -188,46 +189,12 @@ export default definePlugin({
     settings,
     start() {
         addChatBarButton("vc-gary", GaryChatBarIcon);
-        const style = document.createElement("style");
-        style.textContent = `
-            .${cl("icon")} {
-                transform-origin: center;
-                display: inline-block;
-                transition: transform 0.3s ease-in-out;
-            }
-            @keyframes garyBounceRotate {
-                0%, 100% { transform: translateY(0) rotate(0deg); }
-                15% { transform: translateY(-10px) rotate(20deg); }
-                30% { transform: translateY(5px) rotate(-10deg); }
-                45% { transform: translateY(-5px) rotate(5deg); }
-                60% { transform: translateY(2px) rotate(-2deg); }
-                75% { transform: translateY(-1px) rotate(1deg); }
-                90% { transform: translateY(0) rotate(0deg); }
-            }
-            .${cl("chat-button")}.${cl("animating")} .${cl("icon")} {
-                animation: garyBounceRotate 1s ease-in-out;
-            }
-            .${cl("chat-button")}:hover .${cl("icon")} {
-                animation: garyHover 0.5s ease-in-out;
-            }
-            .${cl("chat-button")}.${cl("animating")}:hover .${cl("icon")} {
-                animation: garyBounceRotate 1s ease-in-out;
-            }
-            @keyframes garyHover {
-                0%, 100% { transform: rotate(0deg); }
-                25% { transform: rotate(5deg); }
-                75% { transform: rotate(-5deg); }
-            }
-        `;
-        style.setAttribute("data-gary-style", "true");
-        document.head.appendChild(style);
     },
     stop() {
         removeChatBarButton("vc-gary");
-        const style = document.head.querySelector("style[data-gary-style]");
-        if (style) style.remove();
     }
 });
+
 
 export async function getUrl() {
     const response = await fetch("https://garybot.dev/api/totalgarys");
