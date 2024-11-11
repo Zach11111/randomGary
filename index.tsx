@@ -1,16 +1,21 @@
-import "./styles.css"
+import "./styles.css";
+
 import { addChatBarButton, ChatBarButton, removeChatBarButton } from "@api/ChatButtons";
 import { definePluginSettings } from "@api/Settings";
 import { classNameFactory } from "@api/Styles";
+import { Margins } from "@utils/margins";
 import { classes } from "@utils/misc";
-import definePlugin, { OptionType } from "@utils/types";
+import { ModalCloseButton, ModalContent, ModalHeader, ModalProps, ModalRoot, openModal } from "@utils/modal";
+import definePlugin, { OptionType, PluginNative } from "@utils/types";
 import { findByPropsLazy, findLazy, findStoreLazy } from "@webpack";
-import { ChannelStore, Constants, FluxDispatcher, MessageActions, PermissionsBits, PermissionStore, RestAPI, SelectedChannelStore, showToast, SnowflakeUtils, Toasts, useState } from "@webpack/common";
+import { ChannelStore, Constants, FluxDispatcher, Forms, MessageActions, PermissionsBits, PermissionStore, RestAPI, SearchableSelect, SelectedChannelStore, showToast, SnowflakeUtils, Toasts, useState } from "@webpack/common";
 
 const cl = classNameFactory("vc-gary-");
 const CloudUpload = findLazy(m => m.prototype?.trackUploadFinished);
 const PendingReplyStore = findStoreLazy("PendingReplyStore");
 const { getSlowmodeCooldownGuess } = findByPropsLazy("getSlowmodeCooldownGuess");
+const Native = VencordNative.pluginHelpers.RandomGary as PluginNative<typeof import("./native")>;
+
 export function GaryIcon({ height = 30, width = 30, className }: { height?: number; width?: number; className?: string; }) {
     return (
         <svg xmlns="http://www.w3.org/2000/svg" width={width} height={height} fill="none" viewBox="0 0 24 24" className={classes(className, cl("icon"))}>
@@ -31,6 +36,15 @@ const settings = definePluginSettings({
         options: [
             { label: "Left Click: Send as a link, Right Click: Send as an attachment", value: "link", default: true },
             { label: "Left Click: Send as an attachment, Right Click: Send as a link", value: "attachment" }
+        ],
+    },
+    randomGaryImageSource: {
+        description: "Choose the source of the image",
+        type: OptionType.SELECT,
+        options: [
+            { label: "Gary API", value: "gary", default: true },
+            { label: "Cat API", value: "catapi" },
+            { label: "Minker API (attachment only)", value: "minker" }
         ],
     },
 });
@@ -86,10 +100,9 @@ async function uploadGaryImage(url: string, channelId: string) {
             }
 
             showToast("Uploading image, this may take a few seconds.", Toasts.Type.MESSAGE);
-            const response = await fetch(url);
-            const blob = await response.blob();
+            const buffer = await Native.getImageBuffer(url);
+            const blob = new Blob([buffer], { type: "image/jpeg" });
             const file = new File([blob], "gary.jpg", { type: "image/jpeg" });
-
             const upload = new CloudUpload({
                 file,
                 isThumbnail: false,
@@ -133,17 +146,58 @@ async function uploadGaryImage(url: string, channelId: string) {
     }
 }
 
+
+function GaryModal({ rootProps }: { rootProps: ModalProps; }) {
+    const options = [
+        { value: "gary", label: "Gary API" },
+        { value: "catapi", label: "Cat API" },
+        { value: "minker", label: "Minker API (attachment only)" }
+    ];
+    const currentValue = settings.use(["randomGaryImageSource"]).randomGaryImageSource;
+    return (
+        <ModalRoot {...rootProps}>
+            <ModalHeader className={cl("modal-header")}>
+                <Forms.FormTitle tag="h2">
+                    Button Settings
+                </Forms.FormTitle>
+                <ModalCloseButton onClick={rootProps.onClose} />
+            </ModalHeader>
+            <ModalContent className={cl("modal-content")}>
+                <section className={Margins.top16}>
+                    <Forms.FormTitle tag="h3">
+                        {"Image Source"}
+                    </Forms.FormTitle>
+
+                    <SearchableSelect
+                        options={options}
+                        value={options.find(o => o.value === currentValue)}
+                        placeholder={"Select a source"}
+                        maxVisibleItems={5}
+                        closeOnSelect={true}
+                        onChange={v => settings.store.randomGaryImageSource = v}
+                    />
+                </section>
+            </ModalContent>
+        </ModalRoot>
+    );
+}
+
 export const GaryChatBarIcon: ChatBarButton = ({ isMainChat }) => {
     const [isAnimating, setIsAnimating] = useState(false);
     const currentChannelId = SelectedChannelStore.getChannelId();
 
-    const handleClick = async () => {
+    const handleClick = async (e: React.MouseEvent) => {
+        if (e.shiftKey) {
+            handleShiftClick();
+            return;
+        }
+
         setIsAnimating(true);
         setTimeout(() => setIsAnimating(false), 1000);
 
         if (currentChannelId) {
             const link = await getUrl();
-            if (settings.store.randomGarySendMethod === "link") {
+            if (settings.store.randomGarySendMethod === "link" && settings.store.randomGaryImageSource !== "minker") {
                 await sendGaryLink(currentChannelId, link);
             } else {
                 await uploadGaryImage(link, currentChannelId);
@@ -151,25 +205,45 @@ export const GaryChatBarIcon: ChatBarButton = ({ isMainChat }) => {
         }
     };
 
-    const handleRightClick = async (e: React.MouseEvent) => {
+    const handleRightClick = async () => {
         setIsAnimating(true);
         setTimeout(() => setIsAnimating(false), 1000);
 
         if (currentChannelId) {
             const link = await getUrl();
-            if (settings.store.randomGarySendMethod === "attachment") {
+            if (settings.store.randomGarySendMethod === "attachment" && settings.store.randomGaryImageSource !== "minker") {
                 await sendGaryLink(currentChannelId, link);
             } else {
                 await uploadGaryImage(link, currentChannelId);
             }
         }
+    };
+
+    const handleShiftClick = async () => {
+
+        openModal(props => (
+            <GaryModal rootProps={props} />
+        ));
     };
 
     if (!isMainChat) return null;
 
+    let buttonTooltip;
+    switch (settings.store.randomGaryImageSource) {
+        case "gary":
+            buttonTooltip = "Click for Gary";
+            break;
+        case "catapi":
+            buttonTooltip = "Click for Cat";
+            break;
+        case "minker":
+            buttonTooltip = "Click for Minky";
+            break;
+    }
+
     return (
         <ChatBarButton
-            tooltip="Click for Gary"
+            tooltip={buttonTooltip}
             onClick={handleClick}
             onContextMenu={handleRightClick}
             buttonProps={{
@@ -195,13 +269,25 @@ export default definePlugin({
     }
 });
 
-
 export async function getUrl() {
-    const response = await fetch("https://garybot.dev/api/totalgarys");
-    const { num: numImages } = await response.json();
-    const urlBase = "https://cdn.garybot.dev/gary";
-    const array = new Uint32Array(1);
-    crypto.getRandomValues(array);
-    const randomNumber = (array[0] % numImages) + 1;
-    return `${urlBase}${randomNumber}.jpg`;
+    switch (settings.store.randomGaryImageSource) {
+        case "gary":
+            const response = await fetch("https://garybot.dev/api/totalgarys");
+            const { num: numImages } = await response.json();
+            const urlBase = "https://cdn.garybot.dev/gary";
+            const array = new Uint32Array(1);
+            crypto.getRandomValues(array);
+            const randomNumber = (array[0] % numImages) + 1;
+            return `${urlBase}${randomNumber}.jpg`;
+        case "catapi":
+            const catResponse = await fetch("https://api.thecatapi.com/v1/images/search");
+            const catJson = await catResponse.json();
+            return catJson[0].url;
+        case "minker":
+            return "https://minky.materii.dev/";
+        default:
+            throw new Error("Invalid randomGaryImageSource value");
+    }
 }
+
+
