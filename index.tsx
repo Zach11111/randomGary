@@ -229,7 +229,7 @@ export const GaryChatBarIcon: ChatBarButton = ({ isMainChat }) => {
     if (!isMainChat) return null;
 
     let buttonTooltip;
-    switch (settings.store.randomGaryImageSource) {
+    switch (settings.use(["randomGaryImageSource"]).randomGaryImageSource) {
         case "gary":
             buttonTooltip = "Click for Gary";
             break;
