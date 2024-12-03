@@ -4,7 +4,7 @@
     transition: transform 0.3s ease-in-out;
 }
 
-@keyframes garyBounceRotate {
+@keyframes gary-bounce-rotate {
     0%, 100% { transform: translateY(0) rotate(0deg); }
     15% { transform: translateY(-10px) rotate(20deg); }
     30% { transform: translateY(5px) rotate(-10deg); }
@@ -15,18 +15,18 @@
 }
 
 .vc-gary-chat-button.vc-gary-animating .vc-gary-icon {
-    animation: garyBounceRotate 1s ease-in-out;
+    animation: gary-bounce-rotate 1s ease-in-out;
 }
 
 .vc-gary-chat-button:hover .vc-gary-icon {
-    animation: garyHover 0.5s ease-in-out;
+    animation: gary-hover 0.5s ease-in-out;
 }
 
 .vc-gary-chat-button.vc-gary-animating:hover .vc-gary-icon {
-    animation: garyBounceRotate 1s ease-in-out;
+    animation: gary-bounce-rotate 1s ease-in-out;
 }
 
-@keyframes garyHover {
+@keyframes gary-hover {
     0%, 100% { transform: rotate(0deg); }
     25% { transform: rotate(5deg); }
     75% { transform: rotate(-5deg); }
