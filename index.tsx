@@ -272,13 +272,9 @@ export default definePlugin({
 export async function getUrl() {
     switch (settings.store.randomGaryImageSource) {
         case "gary":
-            const response = await fetch("https://garybot.dev/api/totalgarys");
-            const { num: numImages } = await response.json();
-            const urlBase = "https://cdn.garybot.dev/gary";
-            const array = new Uint32Array(1);
-            crypto.getRandomValues(array);
-            const randomNumber = (array[0] % numImages) + 1;
-            return `${urlBase}${randomNumber}.jpg`;
+            const response = await fetch("https://garybot.dev/api/gary");
+            const json = await response.json();
+            return json.url;
         case "catapi":
             const catResponse = await fetch("https://api.thecatapi.com/v1/images/search");
             const catJson = await catResponse.json();
