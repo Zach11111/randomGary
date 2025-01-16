@@ -44,7 +44,8 @@ const settings = definePluginSettings({
         options: [
             { label: "Gary API", value: "gary", default: true },
             { label: "Cat API", value: "catapi" },
-            { label: "Minker API (attachment only)", value: "minker" }
+            { label: "Minker API (attachment only)", value: "minker" },
+            { label: "Goober API", value: "goober" }
         ],
     },
 });
@@ -151,7 +152,8 @@ function GaryModal({ rootProps }: { rootProps: ModalProps; }) {
     const options = [
         { value: "gary", label: "Gary API" },
         { value: "catapi", label: "Cat API" },
-        { value: "minker", label: "Minker API (attachment only)" }
+        { value: "minker", label: "Minker API (attachment only)" },
+        { value: "goober", label: "Goober API" }
     ];
     const currentValue = settings.use(["randomGaryImageSource"]).randomGaryImageSource;
     return (
@@ -239,6 +241,8 @@ export const GaryChatBarIcon: ChatBarButton = ({ isMainChat }) => {
         case "minker":
             buttonTooltip = "Click for Minky";
             break;
+        case "goober":
+            buttonTooltip = "Click for Goober";
     }
 
     return (
@@ -275,6 +279,10 @@ export async function getUrl() {
             const response = await fetch("https://garybot.dev/api/gary");
             const json = await response.json();
             return json.url;
+        case "goober":
+            const gooberResponse = await fetch("https://garybot.dev/api/goober");
+            const gooberJson = await gooberResponse.json();
+            return gooberJson.url;
         case "catapi":
             const catResponse = await fetch("https://api.thecatapi.com/v1/images/search");
             const catJson = await catResponse.json();
