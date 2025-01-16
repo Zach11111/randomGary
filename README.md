@@ -3,8 +3,8 @@
 Adds a button to send random Gary, Minky, or cat pictures in your Discord chats! 🐱
 
 ## Features
-- Chat bar button for quick Gary/Minky/cat picture sharing
-- Multiple image sources: Gary API, Cat API, or Minker API
+- Chat bar button for quick Gary/Goober/Minky/cat picture sharing
+- Multiple image sources: Gary API, Goober API, Cat API, or Minker API
 - Send as links or attachments
 - Settings accessible via Shift + Click
 
