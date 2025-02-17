@@ -183,7 +183,7 @@ function GaryModal({ rootProps }: { rootProps: ModalProps; }) {
         </ModalRoot>
     );
 }
-
+//@ts-ignore
 export const GaryChatBarIcon: ChatBarButton = ({ isMainChat }) => {
     const [isAnimating, setIsAnimating] = useState(false);
     const currentChannelId = SelectedChannelStore.getChannelId();
