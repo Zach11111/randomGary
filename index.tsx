@@ -16,6 +16,7 @@ const PendingReplyStore = findStoreLazy("PendingReplyStore");
 const { getSlowmodeCooldownGuess } = findByPropsLazy("getSlowmodeCooldownGuess");
 const Native = VencordNative.pluginHelpers.RandomGary as PluginNative<typeof import("./native")>;
 
+
 export function GaryIcon({ height = 30, width = 30, className }: { height?: number; width?: number; className?: string; }) {
     return (
         <svg xmlns="http://www.w3.org/2000/svg" width={width} height={height} fill="none" viewBox="0 0 24 24" className={classes(className, cl("icon"))}>
@@ -266,6 +267,12 @@ export default definePlugin({
     authors: [{ name: "Zach Orange", id: 683550738198036516n }],
     settings,
     start() {
+        VencordNative.csp.requestAddOverride("https://api.garythe.cat", ["img-src", "connect-src"], "RandomGary");
+        VencordNative.csp.requestAddOverride("api.garythe.cat", ["img-src", "connect-src"], "RandomGary");
+        VencordNative.csp.requestAddOverride("https://api.thecatapi.com", ["img-src", "connect-src"], "RandomGary");
+        VencordNative.csp.requestAddOverride("api.thecatapi.com", ["img-src", "connect-src"], "RandomGary");
+        VencordNative.csp.requestAddOverride("https://minky.materii.dev", ["img-src", "connect-src"], "RandomGary");
+        VencordNative.csp.requestAddOverride("minky.materii.dev", ["img-src", "connect-src"], "RandomGary");
         addChatBarButton("vc-gary", GaryChatBarIcon);
     },
     stop() {
@@ -276,11 +283,11 @@ export default definePlugin({
 export async function getUrl() {
     switch (settings.store.randomGaryImageSource) {
         case "gary":
-            const response = await fetch("https://garybot.dev/api/gary");
+            const response = await fetch("https://api.garythe.cat/gary");
             const json = await response.json();
             return json.url;
         case "goober":
-            const gooberResponse = await fetch("https://garybot.dev/api/goober");
+            const gooberResponse = await fetch("https://api.garythe.cat/goober");
             const gooberJson = await gooberResponse.json();
             return gooberJson.url;
         case "catapi":
